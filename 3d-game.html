@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+    <title>3D Cube Shooter</title>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Cube shooter logic
+        let score = 0;
+        let health = 3;
+        const cubes = [];
+
+        function createCube() {
+            const geometry = new THREE.BoxGeometry();
+            const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.x = (Math.random() - 0.5) * 20;
+            cube.position.y = (Math.random() - 0.5) * 20;
+            cube.position.z = Math.random() * -20 - 10;
+            scene.add(cube);
+            cubes.push(cube);
+        }
+
+        function animateCubes() {
+            cubes.forEach(cube => {
+                cube.position.z += 0.1;
+                if (cube.position.z > 5) {
+                    cube.position.z = -10;
+                    cube.position.x = (Math.random() - 0.5) * 20;
+                    cube.position.y = (Math.random() - 0.5) * 20;
+                    health--;
+                    if (health <= 0) {
+                        alert('Game Over! Score: ' + score);
+                        document.location.reload();
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.code === 'Space') {
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+                mouse.x = 0;
+                mouse.y = 0;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(cubes);
+                if (intersects.length > 0) {
+                    scene.remove(intersects[0].object);
+                    score++;
+                    cubes.splice(cubes.indexOf(intersects[0].object), 1);
+                    createCube(); // spawn a new cube
+                }
+            }
+        });
+
+        for (let i = 0; i < 10; i++) {
+            createCube();
+        }
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            animateCubes();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
