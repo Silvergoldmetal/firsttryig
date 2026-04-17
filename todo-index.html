@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        #task-container { margin-bottom: 20px; }
+        .task { margin: 5px 0; }
+        .completed { text-decoration: line-through; color: grey; }
+    </style>
+</head>
+<body>
+    <h1>To-Do List Application</h1>
+    <div id="task-container"></div>
+    <input type="text" id="new-task" placeholder="Add a new task..." />
+    <button id="add-task">Add Task</button>
+    <div>
+        <h3>Statistics</h3>
+        <p id="task-count">Total Tasks: 0</p>
+        <p id="completed-count">Completed Tasks: 0</p>
+    </div>
+    <script>
+        const taskContainer = document.getElementById('task-container');
+        const newTaskInput = document.getElementById('new-task');
+        const addTaskButton = document.getElementById('add-task');
+        const taskCountDisplay = document.getElementById('task-count');
+        const completedCountDisplay = document.getElementById('completed-count');
+
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+        function updateTaskCount() {
+            taskCountDisplay.innerText = `Total Tasks: ${tasks.length}`;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            completedCountDisplay.innerText = `Completed Tasks: ${completedTasks}`;
+        }
+
+        function renderTasks() {
+            taskContainer.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task';
+                taskElement.innerHTML = `<input type='checkbox' ${task.completed ? 'checked' : ''}/>
+                                         ${task.completed ? `<span class='completed'>${task.name}</span>` : task.name}
+                                         <button onclick='deleteTask(${index})'>Delete</button>`;
+                taskContainer.appendChild(taskElement);
+                taskElement.querySelector('input').addEventListener('change', () => {
+                    task.completed = !task.completed;
+                    saveTasks();
+                    renderTasks();
+                });
+            });
+            updateTaskCount();
+        }
+
+        function addTask() {
+            const taskName = newTaskInput.value.trim();
+            if (taskName) {
+                tasks.push({ name: taskName, completed: false });
+                newTaskInput.value = '';
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        }
+
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        addTaskButton.addEventListener('click', addTask);
+        renderTasks();
+    </script>
+</body>
+</html>
